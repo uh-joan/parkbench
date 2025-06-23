@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "frontend/parkbench-portal/package.json",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["frontend/parkbench-portal/build/**"]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/frontend/parkbench-portal/build/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/parkbench-portal/build/index.html"
+    }
+  ],
+  "functions": {
+    "frontend/parkbench-portal/build/**": {
+      "includeFiles": "frontend/parkbench-portal/build/**"
+    }
+  }
+} 
