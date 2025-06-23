@@ -28,7 +28,7 @@ interface User {
 class ParkBenchAPI {
   private client: AxiosInstance;
 
-  constructor(baseURL: string = 'http://localhost:9000') {
+  constructor(baseURL: string = 'https://parkbench-backend-production.up.railway.app') {
     this.client = axios.create({
       baseURL,
       timeout: 10000,
@@ -57,7 +57,7 @@ class ParkBenchAPI {
   }
 
   async login(agentName: string, certificatePem: string): Promise<LoginResponse> {
-    const response = await this.client.post('/auth/login', {
+    const response = await this.client.post('/api/v1/auth/login', {
       agent_name: agentName,
       certificate_pem: certificatePem
     });
@@ -65,7 +65,7 @@ class ParkBenchAPI {
   }
 
   async getCurrentUser(): Promise<User> {
-    const response = await this.client.get('/auth/me');
+    const response = await this.client.get('/api/v1/auth/me');
     return response.data;
   }
 
@@ -77,22 +77,22 @@ class ParkBenchAPI {
 
   // Agent Registration
   async registerAgent(request: RegistrationRequest): Promise<RegistrationResponse> {
-    const response = await this.client.post('/register', request);
+    const response = await this.client.post('/api/v1/register', request);
     return response.data;
   }
 
   async renewAgent(agentName: string): Promise<ApiResponse<string>> {
-    const response = await this.client.post('/renew', { agentName });
+    const response = await this.client.post('/api/v1/renew', { agentName });
     return response.data;
   }
 
   async deactivateAgent(agentName: string): Promise<ApiResponse<string>> {
-    const response = await this.client.post('/deactivate', { agentName });
+    const response = await this.client.post('/api/v1/deactivate', { agentName });
     return response.data;
   }
 
   async getAgentStatus(agentName: string): Promise<Agent> {
-    const response = await this.client.get(`/status`, {
+    const response = await this.client.get(`/api/v1/status`, {
       params: { agentName }
     });
     return response.data;
@@ -100,25 +100,25 @@ class ParkBenchAPI {
 
   // Agent Discovery
   async searchAgents(filters: SearchFilters = {}): Promise<Agent[]> {
-    const response = await this.client.get('/agents/search', {
+    const response = await this.client.get('/api/v1/agents/search', {
       params: filters
     });
     return response.data;
   }
 
   async getAgentProfile(agentName: string): Promise<Agent> {
-    const response = await this.client.get(`/agents/${agentName}`);
+    const response = await this.client.get(`/api/v1/agents/${agentName}`);
     return response.data;
   }
 
   async getAgentA2ADescriptor(agentName: string): Promise<any> {
-    const response = await this.client.get(`/agents/${agentName}/a2a`);
+    const response = await this.client.get(`/api/v1/agents/${agentName}/a2a`);
     return response.data;
   }
 
   // A2A Negotiation
   async negotiateTask(request: NegotiationRequest): Promise<NegotiationResponse> {
-    const response = await this.client.post('/a2a/negotiate', request);
+    const response = await this.client.post('/api/v1/a2a/negotiate', request);
     return response.data;
   }
 
@@ -128,7 +128,7 @@ class ParkBenchAPI {
     task: string,
     context: Record<string, any> = {}
   ): Promise<A2ASession> {
-    const response = await this.client.post('/a2a/session/initiate', {
+    const response = await this.client.post('/api/v1/a2a/session/initiate', {
       initiating_agent: initiatingAgent,
       target_agent: targetAgent,
       task,
@@ -139,7 +139,7 @@ class ParkBenchAPI {
 
   // Session Management
   async getSessionStatus(sessionId: string): Promise<A2ASession> {
-    const response = await this.client.get(`/a2a/session/${sessionId}/status`);
+    const response = await this.client.get(`/api/v1/a2a/session/${sessionId}/status`);
     return response.data;
   }
 
@@ -147,17 +147,17 @@ class ParkBenchAPI {
     sessionId: string,
     updates: Partial<A2ASession>
   ): Promise<A2ASession> {
-    const response = await this.client.put(`/a2a/session/${sessionId}`, updates);
+    const response = await this.client.put(`/api/v1/a2a/session/${sessionId}`, updates);
     return response.data;
   }
 
   async terminateSession(sessionId: string): Promise<ApiResponse<string>> {
-    const response = await this.client.delete(`/a2a/session/${sessionId}`);
+    const response = await this.client.delete(`/api/v1/a2a/session/${sessionId}`);
     return response.data;
   }
 
   async getAllSessions(): Promise<A2ASession[]> {
-    const response = await this.client.get('/a2a/sessions');
+    const response = await this.client.get('/api/v1/a2a/sessions');
     return response.data;
   }
 }

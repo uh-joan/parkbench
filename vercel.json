@@ -2,26 +2,52 @@
   "version": 2,
   "builds": [
     {
-      "src": "frontend/parkbench-portal/package.json",
-      "use": "@vercel/node",
+      "src": "package.json",
+      "use": "@vercel/static-build",
       "config": {
-        "includeFiles": ["frontend/parkbench-portal/build/**"]
+        "distDir": "build"
       }
     }
   ],
   "routes": [
     {
       "src": "/static/(.*)",
-      "dest": "/frontend/parkbench-portal/build/static/$1"
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/manifest.json"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/favicon.ico"
+    },
+    {
+      "src": "/robots.txt",
+      "dest": "/robots.txt"
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/parkbench-portal/build/index.html"
+      "dest": "/index.html"
     }
   ],
-  "functions": {
-    "frontend/parkbench-portal/build/**": {
-      "includeFiles": "frontend/parkbench-portal/build/**"
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://parkbench-backend-production.up.railway.app; object-src 'none'; base-uri 'self';"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
     }
-  }
+  ]
 } 

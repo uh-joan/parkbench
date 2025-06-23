@@ -37,25 +37,112 @@ const Dashboard: React.FC = () => {
     try {
       setLoading(true);
       
-      // Load data in parallel
-      const [health, agents, sessions] = await Promise.all([
-        api.healthCheck(),
-        api.searchAgents(),
-        api.getAllSessions()
-      ]);
+      try {
+        // Try to load real data from backend
+        const [health, agents, sessions] = await Promise.all([
+          api.healthCheck(),
+          api.searchAgents(),
+          api.getAllSessions()
+        ]);
 
-      // Calculate stats
-      const dashboardStats: DashboardStats = {
-        totalAgents: agents.length,
-        activeAgents: agents.filter(agent => agent.active).length,
-        activeSessions: sessions.filter(session => session.status === 'active').length,
-        totalSessions: sessions.length,
-        apiHealth: health.status === 'healthy',
-      };
+        // Calculate stats from real data
+        const dashboardStats: DashboardStats = {
+          totalAgents: agents.length,
+          activeAgents: agents.filter(agent => agent.active).length,
+          activeSessions: sessions.filter(session => session.status === 'active').length,
+          totalSessions: sessions.length,
+          apiHealth: health.status === 'healthy',
+        };
 
-      setStats(dashboardStats);
-      setRecentAgents(agents.slice(0, 5)); // Show latest 5 agents
-      setRecentSessions(sessions.slice(0, 5)); // Show latest 5 sessions
+        setStats(dashboardStats);
+        setRecentAgents(agents.slice(0, 5));
+        setRecentSessions(sessions.slice(0, 5));
+        
+      } catch (backendError) {
+        console.log('Backend unavailable, using mock data for dashboard');
+        
+        // Fall back to mock data for demo purposes
+        const mockAgents: Agent[] = [
+          {
+            agent_id: 'mock-1',
+            agent_name: 'demo-agent',
+            active: true,
+            status: 'active',
+            created_at: new Date().toISOString(),
+            a2a_descriptor: {
+              description: 'Demo agent for text processing and data analysis',
+              protocols: ['REST', 'WebSocket'],
+              interfaces: { api: '/api/v1' },
+              capabilities: ['text-processing', 'data-analysis', 'task-automation']
+            }
+          },
+          {
+            agent_id: 'mock-2', 
+            agent_name: 'analysis-bot',
+            active: true,
+            status: 'active',
+            created_at: new Date().toISOString(),
+            a2a_descriptor: {
+              description: 'Specialized agent for data analysis and reporting',
+              protocols: ['REST', 'GraphQL'],
+              interfaces: { api: '/api/v1' },
+              capabilities: ['data-analysis', 'reporting', 'visualization']
+            }
+          },
+          {
+            agent_id: 'mock-3',
+            agent_name: 'task-helper',
+            active: false,
+            status: 'inactive',
+            created_at: new Date(Date.now() - 86400000).toISOString(),
+            a2a_descriptor: {
+              description: 'Task management and scheduling assistant',
+              protocols: ['REST'],
+              interfaces: { api: '/api/v1' },
+              capabilities: ['task-management', 'scheduling']
+            }
+          }
+        ];
+
+        const mockSessions: A2ASession[] = [
+          {
+            session_id: 'session-1',
+            initiating_agent: 'demo-agent',
+            target_agent: 'analysis-bot',
+            task: 'Analyze quarterly sales data',
+            status: 'active',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            context: { data_type: 'sales', quarter: 'Q4' },
+            messages: []
+          },
+          {
+            session_id: 'session-2',
+            initiating_agent: 'analysis-bot',
+            target_agent: 'task-helper',
+            task: 'Schedule follow-up meeting',
+            status: 'completed',
+            created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+            updated_at: new Date(Date.now() - 86400000).toISOString(),
+            context: { meeting_type: 'follow-up', participants: 2 },
+            messages: []
+          }
+        ];
+
+        // Calculate stats from mock data
+        const mockStats: DashboardStats = {
+          totalAgents: mockAgents.length,
+          activeAgents: mockAgents.filter(agent => agent.active).length,
+          activeSessions: mockSessions.filter(session => session.status === 'active').length,
+          totalSessions: mockSessions.length,
+          apiHealth: false, // Backend is down
+        };
+
+        setStats(mockStats);
+        setRecentAgents(mockAgents.slice(0, 5));
+        setRecentSessions(mockSessions.slice(0, 5));
+      }
+      
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {

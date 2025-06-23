@@ -23,15 +23,9 @@ const Login: React.FC = () => {
     setIsLoading(true);
     
     try {
-      if (useMockAuth) {
-        // Mock authentication for demo - bypass backend
-        localStorage.setItem('auth_token', 'mock_jwt_token');
-        localStorage.setItem('user_agent_name', agentName);
-        navigate('/dashboard');
-      } else {
-        await login(agentName, certificatePem);
-        navigate('/dashboard');
-      }
+      // Always use the AuthContext login method for consistent state management
+      await login(agentName, certificatePem);
+      navigate('/dashboard');
     } catch (error) {
       // Error is handled by AuthContext
     } finally {
@@ -141,7 +135,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
                 rows={showCertificate ? 8 : 3}
                 placeholder="Paste your PEM certificate here..."
                 style={{ resize: 'vertical' }}
-                required={!useMockAuth}
+                required={false}
               />
             </div>
 

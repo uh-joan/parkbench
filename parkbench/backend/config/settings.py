@@ -10,12 +10,15 @@ class Settings(BaseSettings):
     api_version: str = "0.1.0"
     api_debug: bool = False
     
-    # Database Settings
-    database_url: str = "postgresql://parkbenchuser:parkbenchpassword@localhost:5432/parkbenchdb"
+    # Database Settings - Use Railway DATABASE_URL if available, fallback to localhost
+    database_url: str = os.getenv(
+        "DATABASE_URL", 
+        "postgresql://parkbenchuser:parkbenchpassword@localhost:5432/parkbenchdb"
+    )
     database_echo: bool = False
     
     # Security Settings
-    secret_key: str = "your-secret-key-change-in-production"
+    secret_key: str = os.getenv("SECRET_KEY", "Jan1saez01")
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     

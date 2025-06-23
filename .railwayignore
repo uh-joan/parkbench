@@ -1,0 +1,13 @@
+# Ignore frontend files for backend deployment
+frontend/
+node_modules/
+package.json
+package-lock.json
+src/
+public/
+tsconfig.json
+*.md
+.git/
+.vercel/
+vercel.json
+start-parkbench.sh 
