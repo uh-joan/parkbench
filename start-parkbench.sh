@@ -14,6 +14,16 @@ fi
 
 # Start backend services (Docker Compose)
 echo "📦 Starting backend services..."
+echo "🔍 Current directory: $(pwd)"
+echo "🔍 Changing to: parkbench/deployment"
+
+if [ ! -d "parkbench/deployment" ]; then
+    echo "❌ Backend deployment directory not found: parkbench/deployment"
+    echo "Available directories:"
+    ls -la
+    exit 1
+fi
+
 cd parkbench/deployment
 docker compose up -d
 
@@ -37,7 +47,20 @@ fi
 
 # Start frontend development server
 echo "🎨 Starting frontend portal..."
-cd ../frontend/parkbench-portal
+echo "🔍 Current directory: $(pwd)"
+echo "🔍 Changing to: ../../frontend/parkbench-portal"
+
+if [ ! -d "../../frontend/parkbench-portal" ]; then
+    echo "❌ Frontend directory not found: ../../frontend/parkbench-portal"
+    echo "Available directories from $(pwd):"
+    ls -la ../../
+    echo "Frontend directories:"
+    ls -la ../../frontend/ 2>/dev/null || echo "frontend/ not found"
+    exit 1
+fi
+
+cd ../../frontend/parkbench-portal
+echo "✅ Changed to frontend directory: $(pwd)"
 
 # Check if node_modules exists
 if [ ! -d "node_modules" ]; then
@@ -82,7 +105,7 @@ cleanup() {
     fi
     
     # Stop backend
-    cd ../../parkbench/deployment
+    cd ../../../parkbench/deployment
     docker compose down
     
     echo "✅ All services stopped"
