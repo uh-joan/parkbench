@@ -1,12 +1,13 @@
 export interface Agent {
+  agent_name: string;
   agent_id: string;
-  agentName: string;
-  certificatePEM: string;
-  agent_metadata: AgentMetadata;
-  verified: boolean;
+  a2a_descriptor: A2ADescriptor;
   active: boolean;
   created_at: string;
-  updated_at: string;
+  last_seen?: string;
+  description?: string;
+  tags?: string[];
+  status: 'active' | 'inactive' | 'pending';
 }
 
 export interface AgentMetadata {
@@ -25,18 +26,19 @@ export interface AgentMetadata {
 }
 
 export interface A2ADescriptor {
-  supported_tasks: string[];
-  negotiation: boolean;
-  context_required: string[];
-  token_budget: number;
+  description: string;
+  protocols: string[];
+  interfaces: Record<string, any>;
+  capabilities: string[];
+  constraints?: Record<string, any>;
 }
 
 export interface SearchFilters {
-  skill?: string;
+  name?: string;
+  tags?: string[];
+  capabilities?: string[];
+  status?: 'active' | 'inactive' | 'pending';
   protocol?: string;
-  a2a_compliant?: boolean;
-  verified?: boolean;
-  active?: boolean;
 }
 
 export interface A2ASession {
@@ -44,46 +46,72 @@ export interface A2ASession {
   initiating_agent: string;
   target_agent: string;
   task: string;
-  context: Record<string, any>;
-  session_token: string;
-  status: 'active' | 'completed' | 'failed' | 'terminated';
+  status: 'initiated' | 'negotiating' | 'active' | 'completed' | 'failed' | 'terminated';
   created_at: string;
   updated_at: string;
+  context: Record<string, any>;
+  messages: SessionMessage[];
+}
+
+export interface SessionMessage {
+  timestamp: string;
+  sender: string;
+  message_type: string;
+  content: any;
 }
 
 export interface NegotiationRequest {
-  initiatingAgentName: string;
-  requestedTask: string;
-  context: Record<string, any>;
-  preferredCapabilities?: Record<string, any>;
-}
-
-export interface CandidateAgent {
-  agentName: string;
-  matchScore: number;
-  supportedTasks: string[];
-  negotiation: boolean;
-  token_budget: number;
+  initiating_agent: string;
+  target_agent: string;
+  task: string;
+  requirements: Record<string, any>;
+  constraints?: Record<string, any>;
 }
 
 export interface NegotiationResponse {
-  candidateAgents: CandidateAgent[];
+  session_id: string;
+  status: 'accepted' | 'rejected' | 'counter_proposal';
+  terms?: Record<string, any>;
+  message?: string;
 }
 
 export interface RegistrationRequest {
-  agentName: string;
-  certificatePEM: string;
-  metadata: AgentMetadata;
+  agent_name: string;
+  certificate_pem: string;
+  a2a_descriptor: A2ADescriptor;
+  description?: string;
+  tags?: string[];
 }
 
 export interface RegistrationResponse {
   agent_id: string;
-  agentName: string;
+  agent_name: string;
   status: string;
+  message?: string;
 }
 
 export interface ApiResponse<T> {
-  data?: T;
-  error?: string;
+  data: T;
   message?: string;
+  status: 'success' | 'error';
+}
+
+export interface User {
+  agent_name: string;
+  agent_id: string;
+  permissions: string[];
+  auth_type: string;
+  rate_limit: number;
+}
+
+export interface LoginRequest {
+  agent_name: string;
+  certificate_pem: string;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  agent_name: string;
 } 

@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import {
   Agent,
   SearchFilters,
@@ -9,6 +9,21 @@ import {
   RegistrationResponse,
   ApiResponse
 } from '../types';
+
+interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  agent_name: string;
+}
+
+interface User {
+  agent_name: string;
+  agent_id: string;
+  permissions: string[];
+  auth_type: string;
+  rate_limit: number;
+}
 
 class ParkBenchAPI {
   private client: AxiosInstance;
@@ -30,6 +45,28 @@ class ParkBenchAPI {
         return Promise.reject(error);
       }
     );
+  }
+
+  // Authentication methods
+  setAuthToken(token: string | null): void {
+    if (token) {
+      this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete this.client.defaults.headers.common['Authorization'];
+    }
+  }
+
+  async login(agentName: string, certificatePem: string): Promise<LoginResponse> {
+    const response = await this.client.post('/auth/login', {
+      agent_name: agentName,
+      certificate_pem: certificatePem
+    });
+    return response.data;
+  }
+
+  async getCurrentUser(): Promise<User> {
+    const response = await this.client.get('/auth/me');
+    return response.data;
   }
 
   // Health check
