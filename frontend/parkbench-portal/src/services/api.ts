@@ -158,7 +158,8 @@ class ParkBenchAPI {
 
   async getAllSessions(): Promise<A2ASession[]> {
     const response = await this.client.get('/api/v1/a2a/sessions');
-    return response.data;
+    // Backend returns {sessions: [], total: 0, offset: 0, limit: 50}
+    return response.data.sessions || response.data;
   }
 }
 

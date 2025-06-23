@@ -38,18 +38,22 @@ const Dashboard: React.FC = () => {
       setLoading(true);
       
       try {
-        // Try to load real data from backend (works even with mock auth)
-        const [health, agents, sessions] = await Promise.all([
-          api.healthCheck(),
-          api.searchAgents(),
-          api.getAllSessions()
-        ]);
+        console.log('Making dashboard API calls... (v2025-06-23-22:43)');
+        
+        const health = await api.healthCheck();
+        console.log('Health check successful:', health);
+        
+        const agents = await api.searchAgents();
+        console.log('Agents search successful:', agents);
+        
+        const sessions = await api.getAllSessions();
+        console.log('Sessions fetch successful:', sessions);
 
         // Calculate stats from real data
         const dashboardStats: DashboardStats = {
           totalAgents: agents.length,
           activeAgents: agents.filter(agent => agent.active).length,
-          activeSessions: sessions.filter(session => session.status === 'active').length,
+          activeSessions: sessions.filter((session: A2ASession) => session.status === 'active').length,
           totalSessions: sessions.length,
           apiHealth: health.status === 'healthy',
         };
@@ -61,6 +65,7 @@ const Dashboard: React.FC = () => {
         console.log('Dashboard loaded real data from backend');
         
       } catch (backendError) {
+        console.error('Dashboard API calls failed:', backendError);
         console.log('Backend unavailable, using mock data for dashboard');
         
         // Fall back to mock data only if backend is completely unavailable
