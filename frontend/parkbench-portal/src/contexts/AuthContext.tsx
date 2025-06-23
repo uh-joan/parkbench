@@ -44,7 +44,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (token && agentName) {
           if (token === 'mock_jwt_token') {
-            // Mock authentication
+            // Mock authentication - set mock token for API calls
+            api.setAuthToken(token);
             setUser({
               agent_name: agentName,
               agent_id: 'mock-agent-id',
@@ -97,6 +98,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const mockToken = 'mock_jwt_token';
         localStorage.setItem('auth_token', mockToken);
         localStorage.setItem('user_agent_name', agentName);
+        
+        // Set auth token for future requests (even mock token)
+        api.setAuthToken(mockToken);
         
         // Set mock user data
         setUser({

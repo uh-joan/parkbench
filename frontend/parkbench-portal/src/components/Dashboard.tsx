@@ -38,7 +38,7 @@ const Dashboard: React.FC = () => {
       setLoading(true);
       
       try {
-        // Try to load real data from backend
+        // Try to load real data from backend (works even with mock auth)
         const [health, agents, sessions] = await Promise.all([
           api.healthCheck(),
           api.searchAgents(),
@@ -58,10 +58,12 @@ const Dashboard: React.FC = () => {
         setRecentAgents(agents.slice(0, 5));
         setRecentSessions(sessions.slice(0, 5));
         
+        console.log('Dashboard loaded real data from backend');
+        
       } catch (backendError) {
         console.log('Backend unavailable, using mock data for dashboard');
         
-        // Fall back to mock data for demo purposes
+        // Fall back to mock data only if backend is completely unavailable
         const mockAgents: Agent[] = [
           {
             agent_id: 'mock-1',
