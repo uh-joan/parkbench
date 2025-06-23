@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ../backend # Path to the directory containing the Dockerfile
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000" # Map host port 8000 to container port 8000
+    volumes:
+      - ../backend:/app # Mount the backend code for live reloading (development)
+                        # For production, you might remove this volume mount to use code baked into the image.
+    environment:
+      # Pass the DATABASE_URL to the backend container.
+      # This will override any default in settings.py if that default is not what's intended for Compose.
+      # It refers to the 'db' service within the Docker network.
+      DATABASE_URL: "postgresql://parkbenchuser:parkbenchpassword@db:5432/parkbenchdb"
+      PYTHONUNBUFFERED: 1 # Ensures print statements and logs are sent straight to console
+      # Any other environment variables needed by your backend application
+      # API_PREFIX: "/api/v1" # Already in settings.py, but could be overridden
+    depends_on:
+      - db # Ensures the 'db' service is started before the 'backend' service
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload # Overrides Dockerfile CMD for dev
+
+  db:
+    image: postgres:13-alpine # Using alpine for a smaller image size
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/ # Persist database data
+    environment:
+      POSTGRES_USER: parkbenchuser
+      POSTGRES_PASSWORD: parkbenchpassword # Use strong passwords in production, manage via secrets
+      POSTGRES_DB: parkbenchdb
+    ports:
+      - "5432:5432" # Map host port 5432 to container port 5432 (for direct DB access if needed)
+    healthcheck: # Optional: wait for postgres to be ready
+      test: ["CMD-SHELL", "pg_isready -U parkbenchuser -d parkbenchdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data: # Defines the named volume for data persistence
+
+# To run:
+# From the parkbench/deployment directory:
+# docker-compose up --build
+
+# To run tests within a Docker environment (more complex setup, not covered here):
+# You'd typically define another service for tests or run tests inside the backend container.
+
+# Notes:
+# - The backend service's `DATABASE_URL` points to `db:5432`. 'db' is the service name for PostgreSQL.
+# - `depends_on` helps with startup order but doesn't guarantee the DB inside the 'db' container is fully ready.
+#   The healthcheck on the 'db' service helps, and application-level retry logic for DB connection is robust.
+#   FastAPI lifespan event for init_db will try to connect; if it fails, app won't start.
+# - For production, consider removing `--reload` from the backend's command and the code volume mount.
+# - Secrets management for passwords (e.g., POSTGRES_PASSWORD) should be handled more securely in production
+#   (e.g., using Docker secrets, environment files not committed to VCS, or other secrets management tools).
+# - The `../backend:/app` volume mount means changes in your local `backend` directory
+#   will be reflected inside the container, and `uvicorn --reload` will restart the server.
+# - If `settings.py` loads `DATABASE_URL` from `.env` file, ensure that `.env` file is either
+#   copied into the Docker image (not recommended for secrets) or the variables are explicitly
+#   set in the `environment` section of `docker-compose.yml` (as done here for DATABASE_URL).
+#   The explicit `environment` variables in docker-compose take precedence over those in a `.env`
+#   file that might be loaded by `python-dotenv` from within the container's file system,
+#   unless `python-dotenv` is configured to override existing env vars.
+#   Typically, for Docker, you rely on Docker's environment variable injection.
+#   The `load_dotenv()` in `settings.py` will load from a `.env` file if present in `/app`
+#   (where backend code is copied/mounted), but `DATABASE_URL` set here will be the effective one.
+#   It is good practice to have a `.env.example` but not commit the actual `.env` file.
+#   The `docker-compose.yml` then becomes the source of truth for service configuration in Compose environment.

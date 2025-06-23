@@ -1,0 +1,273 @@
+openapi: 3.0.0
+info:
+  title: ParkBench API
+  version: 0.1.0
+  description: |
+    API specification for ParkBench: an open, vendor-neutral AI agent identity,
+    discovery, negotiation, and orchestration platform.
+servers:
+  - url: http://localhost:8000/api/v1 # Example server URL
+
+paths:
+  /register:
+    post:
+      summary: Register a new agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../backend/api/schemas/agent_registration.json' # Path relative to openapi.yaml
+      operationId: registerAgent
+      tags:
+        - Agent Registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              # $ref: '#/components/schemas/AgentRegistrationRequest' # If defined below and preferred
+              $ref: '../backend/api/schemas/agent_registration.json'
+              # This JSON schema should align with the Pydantic model AgentRegistrationRequest
+      responses:
+        '201': # Correct status code for resource creation
+          description: Agent registered successfully
+          content:
+            application/json:
+              schema:
+                # $ref: '#/components/schemas/AgentRegistrationResponse' # If defined below
+                type: object # Inline definition as per current structure
+                properties:
+                  agent_id:
+                    type: string
+                    format: uuid
+                    description: "Unique identifier for the registered agent."
+                    example: "123e4567-e89b-12d3-a456-426614174000"
+                  agentName:
+                    type: string
+                    description: "The unique name of the agent."
+                    example: "translator-b.agents.example.com"
+                  status:
+                    type: string
+                    enum: [registered]
+                    description: "Registration status."
+                    example: "registered"
+        '400':
+          description: Bad Request (e.g., malformed JSON).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Agent with this name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error (e.g., invalid field values, missing fields).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError' # Standard FastAPI validation error
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /renew:
+    post:
+      summary: Renew an agent's registration
+      # ... (details to be added) ...
+      responses:
+        '200':
+          description: Agent registration renewed
+
+  /deactivate:
+    post:
+      summary: Deactivate an agent
+      # ... (details to be added) ...
+      responses:
+        '200':
+          description: Agent deactivated
+
+  /status:
+    get:
+      summary: Get an agent's registration status
+      parameters:
+        - name: agentName
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent status
+
+  /agents/search:
+    get:
+      summary: Search for agents based on criteria
+      parameters:
+        - name: skill
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: protocol
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: a2a_compliant
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: verified
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: active
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of matching agents
+
+  /agents/{agentName}:
+    get:
+      summary: Get an agent's profile
+      parameters:
+        - name: agentName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent profile details
+
+  /agents/{agentName}/a2a:
+    get:
+      summary: Get A2A descriptors for an agent
+      parameters:
+        - name: agentName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A2A descriptors
+          content:
+            application/json:
+              schema:
+                $ref: '../backend/api/schemas/a2a_descriptor.json' # Path relative to openapi.yaml
+
+  /a2a/negotiate:
+    post:
+      summary: Negotiate a task with candidate agents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                initiatingAgentName:
+                  type: string
+                requestedTask:
+                  type: string
+                context:
+                  type: object
+                preferredCapabilities:
+                  type: object # Define further if needed
+      responses:
+        '200':
+          description: Candidate agents for the task
+
+  /a2a/session/initiate:
+    post:
+      summary: Initiate an A2A session
+      # ... (details to be added) ...
+      responses:
+        '200':
+          description: A2A session initiated
+
+  /a2a/session/{sessionID}/status:
+    get:
+      summary: Get the status of an A2A session
+      parameters:
+        - name: sessionID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session status
+
+components:
+  schemas:
+    # Re-usable schemas can be defined here if not referencing directly
+    # For now, referencing directly from the JSON files.
+    AgentRegistrationRequestSchema: # More descriptive name for the schema file
+      $ref: '../backend/api/schemas/agent_registration.json'
+    # AgentRegistrationResponse: # Could define the response structure here too
+    #   type: object
+    #   properties:
+    #     agent_id: { type: string, format: uuid }
+    #     agentName: { type: string }
+    #     status: { type: string, enum: [registered] }
+    A2ADescriptor:
+      $ref: '../backend/api/schemas/a2a_descriptor.json'
+    A2ANegotiation:
+      $ref: '../backend/api/schemas/a2a_negotiation.json'
+
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: A human-readable error message.
+          example: "Specific error message detailing what went wrong."
+
+    HTTPValidationError: # As typically returned by FastAPI for Pydantic validation errors
+      type: object
+      properties:
+        detail:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationError"
+    ValidationError:
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      properties:
+        loc:
+          type: array
+          items:
+            oneOf: # Location can be string or integer (e.g. for array indices)
+              - type: string
+              - type: integer
+          description: Path to the field that failed validation.
+          example: ["body", "metadata", "api_endpoint"]
+        msg:
+          type: string
+          description: Detailed error message.
+          example: "invalid or missing URL scheme"
+        type:
+          type: string
+          description: Type of error.
+          example: "value_error.url.scheme"
+        # ctx: # Optional context, can be complex
+        #   type: object
+        #   additionalProperties: true

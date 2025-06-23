@@ -1,0 +1,6 @@
+sqlalchemy
+psycopg2-binary # For PostgreSQL
+fastapi
+uvicorn[standard] # For running FastAPI
+pydantic[email] # For schema validation, email validation is a good example of pydantic's power
+python-dotenv # For loading .env files

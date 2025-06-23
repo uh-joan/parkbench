@@ -1,0 +1,5 @@
+pytest
+httpx # HTTP client for testing FastAPI, supports async
+Faker # For generating fake data for tests
+# alembic # If we decide to use Alembic for migrations later
+# pytest-cov # For test coverage reporting (optional)
