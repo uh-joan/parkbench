@@ -1,400 +1,294 @@
-# ParkBench MVP - Phase 1 Technical Specification (Agent-Executable Version)
 
-## Project Overview
+# ParkBench MVP - Unified Specification (Phases 1-3)
 
-**Project Name**: ParkBench
+## Objective
 
-**Objective**: Build the core foundation for an open, vendor-neutral AI Agent Discovery and Directory platform. Phase 1 includes the full backend and frontend functionality needed for agent registration, discovery, identity verification, and storage of capability descriptors (including A2A compatibility).
+Provide a complete, unified specification for ParkBench: an open, vendor-neutral AI agent identity, discovery, negotiation, and orchestration platform. This specification includes:
+- Agent Name Service (ANS) identity layer
+- Agent Registration & Discovery (Phase 1)
+- Active A2A Broker & Negotiation (Phase 2)
+- Developer SDK & LangChain integration (Phase 3)
 
----
+# Phase 0: Standards Alignment
 
-# Core Components
+- Adopt ANS schema (DNS-style agent names)
+- Certificate-based agent identity (X.509 signed by trusted CAs)
+- JSON Schema-based capability and metadata definitions
+- Taxonomy standards for skills, protocols, and capabilities
 
-The following components will be implemented in Phase 1:
+# Phase 1: Core MVP Build - Agent Registration & Discovery
 
-1. **Agent Registration System (Web UI & API)**
-2. **Discovery API**
-3. **Agent Metadata & Capability Schema**
-4. **Identity Verification System**
-5. **Agent Trust Signals (Basic Reputation Layer)**
-6. **Web Frontend Portal**
-7. **Administrative Dashboard**
-8. **Early A2A Descriptor Compatibility**
+## Agent Registration System
 
----
+### Registration API
 
-# Detailed Functional Requirements
+**Endpoint:** `POST /register`
 
-## 1. Agent Registration System
-
-### Functionality
-
-- Allow agents (developers) to register agents via:
-  - Web UI form
-  - REST API endpoint
-- Validate and store registration data.
-- Issue unique `agent_id` (UUID).
-
-### API Specification (OpenAPI Format)
-
-#### Endpoint: `POST /agents/register`
-
-- **Request Body:**
-
+#### Request Body
 ```json
 {
-  "name": "string",
-  "description": "string",
-  "version": "string",
-  "maintainer_contact": "string",
-  "api_endpoint": "string",
-  "protocols": ["REST", "GraphQL", "A2A"],
-  "a2a_compliant": true,
-  "skills": ["travel-booking", "pharma-ci", "market-research"],
-  "input_formats": ["JSON", "CSV"],
-  "output_formats": ["JSON"],
-  "pricing_model": "string",
-  "public_key": "string"
+  "agentName": "translator-b.agents.example.com",
+  "certificatePEM": "string",
+  "metadata": {
+    "description": "string",
+    "version": "string",
+    "maintainer_contact": "string",
+    "api_endpoint": "string",
+    "protocols": ["REST", "GraphQL", "A2A"],
+    "a2a_compliant": true,
+    "skills": ["travel-booking", "pharma-ci", "market-research"],
+    "input_formats": ["JSON", "CSV"],
+    "output_formats": ["JSON"],
+    "pricing_model": "string",
+    "public_key": "string",
+    "a2a": {
+      "supported_tasks": ["string"],
+      "negotiation": true,
+      "context_required": ["string"],
+      "token_budget": 3000
+    }
+  }
 }
 ```
 
-- **Response (201 Created):**
-
+#### Response
 ```json
 {
   "agent_id": "UUID",
+  "agentName": "translator-b.agents.example.com",
   "status": "registered"
 }
 ```
 
-- **Error Codes:**
-  - `400`: Invalid request body
-  - `409`: Agent already exists
-  - `500`: Internal server error
+### Renewal API
+**Endpoint:** `POST /renew`
 
-### Data Validation
+### Deactivation API
+**Endpoint:** `POST /deactivate`
 
-- Validate mandatory fields
-- Validate URL format for `api_endpoint`
-- Validate allowed values for `protocols` and `skills`
+### Status API
+**Endpoint:** `GET /status?agentName=...`
 
-### Database Tables
+## Discovery API
 
-#### `agents`
+### Search Agents
+**Endpoint:** `GET /agents/search`
 
-| Field               | Type         |
-| ------------------- | ------------ |
-| agent\_id           | UUID (PK)    |
-| name                | VARCHAR(255) |
-| description         | TEXT         |
-| version             | VARCHAR(20)  |
-| maintainer\_contact | VARCHAR(255) |
-| api\_endpoint       | VARCHAR(255) |
-| protocols           | JSONB        |
-| a2a\_compliant      | BOOLEAN      |
-| skills              | JSONB        |
-| input\_formats      | JSONB        |
-| output\_formats     | JSONB        |
-| pricing\_model      | VARCHAR(255) |
-| public\_key         | TEXT         |
-| verified            | BOOLEAN      |
-| created\_at         | TIMESTAMP    |
-| updated\_at         | TIMESTAMP    |
+**Query Parameters:**
+- `skill`
+- `protocol`
+- `a2a_compliant`
+- `verified`
+- `active`
 
----
+### Get Agent Profile
+**Endpoint:** `GET /agents/{agentName}`
 
-## 2. Discovery API
+### Get A2A Descriptors
+**Endpoint:** `GET /agents/{agentName}/a2a`
 
-### Functionality
+## Database Tables
 
-- Expose REST API endpoints allowing:
-  - Agent search by capability, protocol, verified status, domain, input/output formats
-  - Return structured agent profiles in JSON
+### `agents`
+| Field | Type |
+|---|---|
+| agent_id | UUID (PK) |
+| agentName | VARCHAR(255) UNIQUE |
+| certificatePEM | TEXT |
+| metadata | JSONB |
+| verified | BOOLEAN |
+| active | BOOLEAN |
+| created_at | TIMESTAMP |
+| updated_at | TIMESTAMP |
 
-### API Endpoints
+# Phase 2: Active A2A Broker
 
-#### `GET /agents/{agent_id}`
+## A2A Session Broker API
 
-- Returns full agent profile by ID.
+### Negotiate Task
+**Endpoint:** `POST /a2a/negotiate`
 
-#### `GET /agents/search`
-
-- Query Parameters:
-  - `skill`
-  - `protocol`
-  - `verified` (boolean)
-  - `a2a_compliant` (boolean)
-- Response:
-
+#### Request Body
 ```json
 {
-  "results": [
+  "initiatingAgentName": "string",
+  "requestedTask": "string",
+  "context": { "key": "value" },
+  "preferredCapabilities": { "negotiation": true, "token_budget": 3000 }
+}
+```
+
+#### Response
+```json
+{
+  "candidateAgents": [
     {
-      "agent_id": "UUID",
-      "name": "string",
-      "skills": ["string"],
-      "protocols": ["string"],
-      "verified": true
+      "agentName": "string",
+      "matchScore": 0.95,
+      "supportedTasks": ["string"],
+      "negotiation": true,
+      "token_budget": 3000
     }
   ]
 }
 ```
 
-#### `GET /agents/protocols/{protocol_type}`
+### Initiate A2A Session
+**Endpoint:** `POST /a2a/session/initiate`
 
-#### `GET /agents/skills/{skill_name}`
+### Session Status
+**Endpoint:** `GET /a2a/session/{sessionID}/status`
 
----
+## A2A Session Identity
 
-## 3. Agent Metadata & Capability Schema
+- Signed ParkBench-issued session tokens
+- Tokens contain:
+  - Session ID
+  - Initiating agent
+  - Target agent
+  - Agreed task & context
+  - Expiration timestamp
 
-- JSON Schema v1 (see above structure)
-- Stored as JSONB inside PostgreSQL for flexibility
-- Indexed via ElasticSearch for full-text search performance
+## A2A Negotiation Format
 
----
-
-## 4. Identity Verification System
-
-### Verification Methods
-
-#### a) Email Verification Flow
-
-- User provides email at registration
-- Backend sends signed magic link email
-- Clicking link activates `email_verified`
-- API: `POST /verify/email` with token
-
-#### b) Domain Ownership
-
-- Backend generates TXT token for domain
-- User adds TXT record to DNS
-- Verification API queries DNS to validate TXT
-- API: `POST /verify/domain`
-
-#### Verification States
-
-- `unverified`
-- `email_verified`
-- `domain_verified`
-- `fully_verified` (both email + domain verified)
-
-### Database Tables
-
-#### `verifications`
-
-| Field            | Type         |
-| ---------------- | ------------ |
-| verification\_id | UUID (PK)    |
-| agent\_id        | UUID (FK)    |
-| email\_token     | VARCHAR(255) |
-| domain\_token    | VARCHAR(255) |
-| email\_verified  | BOOLEAN      |
-| domain\_verified | BOOLEAN      |
-| fully\_verified  | BOOLEAN      |
-| created\_at      | TIMESTAMP    |
-| updated\_at      | TIMESTAMP    |
-
----
-
-## 5. Agent Trust Signals (Basic Reputation Layer)
-
-- Display verification status on profiles
-- Placeholder for future rating/reputation mechanisms
-
----
-
-## 6. Web Frontend Portal
-
-### Features
-
-- Public browse/search page
-- Filter by:
-  - Skills
-  - Protocols
-  - Verification status
-  - A2A compliance
-- View agent profile pages
-
-### UI Design Components
-
-- Search bar (ElasticSearch backend)
-- Filter panel (checkboxes)
-- Results list (name, skill, protocols, verification)
-- Agent detail page (full profile)
-- Admin panel (moderation interface)
-
-### Stack
-
-- Frontend: React.js with TailwindCSS
-- Deployment: AWS (Vercel optional for frontend)
-
----
-
-## 7. Administrative Dashboard
-
-### Admin Features
-
-- Login (OAuth-protected)
-- View new registrations
-- Approve / reject agents
-- Manually edit agent metadata
-- View system logs (ElasticSearch + Prometheus monitoring)
-- Manage verification state overrides
-
----
-
-## 8. Early A2A Descriptor Compatibility
-
-### Minimum A2A v0.1 Support
-
-- Store and expose Anthropic A2A descriptors for registered agents
-- Extend metadata schema with:
-
+Align fully with Anthropic’s A2A protocol envelope structure:
 ```json
 {
-  "a2a": {
-    "supported_tasks": ["string"],
-    "negotiation": true,
-    "context_required": ["string"],
-    "token_budget": integer
-  }
+  "type": "a2a/negotiation_request",
+  "from": "agentA.agents.example.com",
+  "to": "agentB.agents.example.com",
+  "context": { "key": "value" },
+  "supported_tasks": ["book_hotel"],
+  "capability_descriptor": { ... },
+  "signature": "signed_by_initiator"
 }
 ```
 
-- Expose via API: `GET /agents/{agent_id}/a2a`
+## A2A Session Table
 
----
+### `a2a_sessions`
+| Field | Type |
+|---|---|
+| session_id | UUID (PK) |
+| initiating_agent | VARCHAR(255) |
+| target_agent | VARCHAR(255) |
+| task | VARCHAR(255) |
+| session_token | TEXT |
+| status | ENUM (active, completed, failed) |
+| created_at | TIMESTAMP |
+| updated_at | TIMESTAMP |
 
-# Non-Functional Requirements
+# Phase 3: Developer SDK & LangChain Integration
 
-| Category      | Requirement                                    |
-| ------------- | ---------------------------------------------- |
-| Scalability   | System should support 10K+ registered agents   |
-| Performance   | API search latency < 500ms                     |
-| Security      | OAuth2, secure API keys for agent registration |
-| Privacy       | GDPR-compliant data storage                    |
-| Documentation | Public API Docs via OpenAPI (Swagger)          |
+## SDK Languages
+- Python (primary — LangChain)
+- Node.js
 
----
+## SDK Modules
 
-# Deployment / CI/CD
+### Agent Registration Client
+```python
+register_agent(metadata, certificate_pem)
+```
 
-| Tool       | Usage                                      |
-| ---------- | ------------------------------------------ |
-| GitHub     | Code repository                            |
-| Docker     | Containerized deployment                   |
-| Kubernetes | Cloud-neutral deployment (optional for V1) |
-| CI/CD      | GitHub Actions                             |
-| Monitoring | Prometheus + Grafana                       |
+### Discovery Client
+```python
+search_agents(skill=None, protocol=None, a2a_compliant=None, verified=None)
+get_agent_profile(agent_name)
+```
 
----
+### A2A Negotiation Client
+```python
+negotiate_task(initiating_agent_name, requested_task, context, preferred_capabilities)
+initiate_a2a_session(target_agent_name, context, task)
+```
 
-# Testing & Validation
+### A2A Session Handler
+```python
+start_a2a_session(session_token)
+exchange_a2a_messages(session_id, message_envelope)
+```
 
-### Automated Tests
+## LangChain Toolkit
 
-- Unit tests for all API endpoints
-- Integration tests (registration, search, verification flows)
-- Load tests for search scalability
+```python
+from parkbench_sdk import ParkBenchTool
 
-### Test Data
+pb = ParkBenchTool(api_key="...")
+candidate_agents = pb.find_agents_for_task("pharma-competitive-intelligence")
+session = pb.initiate_a2a_workflow("agentA", candidate_agents[0], context)
+```
 
-- Generate sample agents for test environment (1000 synthetic records)
-- Use mock verification providers
+## SDK Deliverables
+- Python SDK (PyPI)
+- Node.js SDK (NPM)
+- Public API Docs (Swagger + SDK)
+- LangChain plugin repo
+- Open-source examples
 
----
+# Complete Roadmap Summary
 
-# Deliverables Summary (Phase 1 Complete System)
+**Phase 0 (Standards Alignment):** ANS + A2A schema adoption
 
-1. Fully functioning **Agent Registration Portal (UI & API)**
-2. Publicly available **Discovery API** with full search capability
-3. **Metadata Schema v1** published
-4. **Early A2A Descriptor Support** implemented and testable
-5. Fully functional **Verification System** (email + domain)
-6. Publicly browsable **Web Frontend Portal**
-7. Fully operational **Admin Dashboard**
-8. Complete automated test suite deployed
+**Phase 1 (Core MVP Build):** Registration system, Discovery API, Web Portal
 
----
+**Phase 2 (Active A2A Broker):** Negotiation APIs, Real-time sessions, Multi-agent workflows
 
-# Target Timeline
+**Phase 3 (Developer SDK):** SDK toolkits, LangChain integration
 
-| Phase                                  | Duration  |
-| -------------------------------------- | --------- |
-| Phase 0 - Design & Standards Alignment | Month 1–2 |
-| Phase 1 - Core Build                   | Month 3–6 |
-| Phase 2 - Developer Integrations       | Month 6+  |
+# Vision Statement
 
----
+> ParkBench becomes the open, vendor-neutral Agent Identity, Discovery, Negotiation, and Orchestration Backbone — providing both human and machine discoverability, trusted identity verification, and fully autonomous multi-agent interoperability across any platform.
 
-# External Dependencies
+# Initial Repo Scaffolding Structure
 
-- Public A2A spec from Anthropic (track v0.1–v0.2 changes)
-- Community taxonomy evolution (for skills/capabilities)
-- Partnership discussions with LangChain, SuperAGI, CrewAI
+```bash
+parkbench/
+│
+├── backend/
+│   ├── api/
+│   │   ├── registration.py
+│   │   ├── discovery.py
+│   │   ├── negotiation.py
+│   │   ├── sessions.py
+│   │   └── schemas/
+│   │       ├── agent_registration.json
+│   │       ├── a2a_descriptor.json
+│   │       └── a2a_negotiation.json
+│   ├── db/
+│   │   └── models.py
+│   ├── config/
+│   │   └── settings.py
+│   └── main.py
+│
+├── frontend/
+│   ├── components/
+│   ├── pages/
+│   └── public/
+│
+├── sdk/
+│   ├── python/
+│   │   └── parkbench_sdk/
+│   │       ├── registration.py
+│   │       ├── discovery.py
+│   │       ├── negotiation.py
+│   │       └── sessions.py
+│   └── nodejs/
+│       └── parkbench-sdk/
+│           ├── registration.js
+│           ├── discovery.js
+│           ├── negotiation.js
+│           └── sessions.js
+│
+├── tests/
+│
+├── docs/
+│   └── openapi.yaml
+│
+└── deployment/
+    ├── docker-compose.yml
+    ├── k8s/
+    └── ci-cd/
+```
 
----
-
-# Execution Sprint Plan
-
-## Sprint 0 — Project Bootstrap (Weeks 1-2)
-
-- Finalize metadata schema
-- Set up GitHub repo, cloud infra, Docker, Kubernetes, CI/CD pipelines
-- Deploy PostgreSQL, ElasticSearch, Prometheus & Grafana
-
-## Sprint 1 — Core Backend Foundations (Weeks 3-4)
-
-- Agents table, registration API, OpenAPI spec, UUID logic, backend logs
-- Unit tests for registration
-
-## Sprint 2 — Identity Verification (Weeks 5-6)
-
-- Email verification flow
-- Domain DNS verification flow
-- Verification API endpoints
-- Full integration tests
-
-## Sprint 3 — Discovery API (Weeks 7-8)
-
-- ElasticSearch index
-- Search API & filters
-- Agent profile lookup API
-- Load testing search scalability
-
-## Sprint 4 — Frontend Build (Weeks 9-10)
-
-- React frontend with search, filters, profile pages
-- Admin portal base UI
-- Error handling states
-
-## Sprint 5 — A2A Descriptor Support (Weeks 11-12)
-
-- A2A descriptor schema extension
-- A2A metadata storage & API exposure
-- A2A schema validation engine
-
-## Sprint 6 — Admin Tools (Weeks 13-14)
-
-- Admin approval workflows
-- Logs dashboard
-- Verification override controls
-
-## Sprint 7 — Final Testing & Deployment (Weeks 15-16)
-
-- Full end-to-end integration tests
-- Security tests, GDPR compliance, backup setup
-- Soft launch cluster deployment
-- Synthetic agent stress testing (1000 agents)
-
----
-
-# Mission Reminder
-
-> ParkBench Phase 1 creates the open, neutral, vendor-agnostic discovery backbone that allows any AI agent to find and interact with any other agent across ecosystems.
-
----
-
-**End of Agent-Executable README for Phase 1 Implementation**
-
+**End of Unified Agent-Executable README (Phases 0-3)**
