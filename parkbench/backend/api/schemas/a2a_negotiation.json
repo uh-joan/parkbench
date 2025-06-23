@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "A2ANegotiation",
+  "description": "Schema for A2A negotiation, aligning with Anthropic's A2A protocol envelope structure",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "a2a/negotiation_request"
+    },
+    "from": {
+      "type": "string",
+      "description": "Agent name of the initiator"
+    },
+    "to": {
+      "type": "string",
+      "description": "Agent name of the target"
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "supported_tasks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "capability_descriptor": {
+      "type": "object",
+      "description": "Placeholder for capability descriptor schema, to be aligned with A2A standards"
+    },
+    "signature": {
+      "type": "string",
+      "description": "Signature of the negotiation request, signed by the initiator"
+    }
+  },
+  "required": ["type", "from", "to", "context", "supported_tasks", "capability_descriptor", "signature"]
+}

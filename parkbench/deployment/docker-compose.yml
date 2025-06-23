@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile # To be created
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend:/app/backend
+    environment:
+      # Define environment variables for the backend
+      # EXAMPLE_ENV_VAR: value
+      PYTHONUNBUFFERED: 1
+    # depends_on:
+      # - db # Uncomment if using a database service
+
+  # frontend: # Uncomment if you plan to containerize the frontend
+  #   build:
+  #     context: ../frontend
+  #     dockerfile: Dockerfile # To be created
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ../frontend:/app/frontend
+  #   environment:
+  #     # Define environment variables for the frontend
+  #     # EXAMPLE_REACT_APP_API_URL: http://localhost:8000/api
+
+  # db: # Uncomment and configure if you add a database like PostgreSQL
+  #   image: postgres:13
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data/
+  #   environment:
+  #     POSTGRES_USER: parkbenchuser
+  #     POSTGRES_PASSWORD: parkbenchpassword
+  #     POSTGRES_DB: parkbenchdb
+  #   ports:
+  #     - "5432:5432"
+
+# volumes: # Uncomment if using a database service
+#   postgres_data:
