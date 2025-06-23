@@ -1,0 +1,50 @@
+{
+  "name": "parkbench-sdk",
+  "version": "0.1.0",
+  "description": "Node.js SDK for ParkBench AI Agent platform - Identity, Discovery, Negotiation, and Orchestration",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint .",
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "parkbench",
+    "negotiation",
+    "discovery",
+    "orchestration",
+    "a2a"
+  ],
+  "author": "ParkBench Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "joi": "^17.11.0",
+    "jsonwebtoken": "^9.0.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.8.0",
+    "@types/uuid": "^9.0.0",
+    "eslint": "^8.50.0",
+    "jest": "^29.7.0",
+    "typescript": "^5.2.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/parkbench/parkbench.git",
+    "directory": "sdk/nodejs/parkbench-sdk"
+  },
+  "homepage": "https://github.com/parkbench/parkbench#readme",
+  "bugs": {
+    "url": "https://github.com/parkbench/parkbench/issues"
+  }
+} 

@@ -4,17 +4,19 @@ services:
   backend:
     build:
       context: ../backend
-      dockerfile: Dockerfile # To be created
+      dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "9000:8000"
     volumes:
       - ../backend:/app/backend
     environment:
-      # Define environment variables for the backend
-      # EXAMPLE_ENV_VAR: value
       PYTHONUNBUFFERED: 1
-    # depends_on:
-      # - db # Uncomment if using a database service
+      DATABASE_URL: "postgresql://parkbenchuser:parkbenchpassword@db:5432/parkbenchdb"
+      API_DEBUG: "true"
+      DATABASE_ECHO: "false"
+    depends_on:
+      - db
+    command: ["python", "main.py"]
 
   # frontend: # Uncomment if you plan to containerize the frontend
   #   build:
@@ -28,16 +30,35 @@ services:
   #     # Define environment variables for the frontend
   #     # EXAMPLE_REACT_APP_API_URL: http://localhost:8000/api
 
-  # db: # Uncomment and configure if you add a database like PostgreSQL
-  #   image: postgres:13
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data/
-  #   environment:
-  #     POSTGRES_USER: parkbenchuser
-  #     POSTGRES_PASSWORD: parkbenchpassword
-  #     POSTGRES_DB: parkbenchdb
-  #   ports:
-  #     - "5432:5432"
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_USER: parkbenchuser
+      POSTGRES_PASSWORD: parkbenchpassword
+      POSTGRES_DB: parkbenchdb
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U parkbenchuser -d parkbenchdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-# volumes: # Uncomment if using a database service
-#   postgres_data:
+  # Optional: Database administration interface
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@parkbench.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5051:80"
+    depends_on:
+      - db
+    profiles:
+      - admin  # Use with: docker-compose --profile admin up
+
+volumes:
+  postgres_data:
