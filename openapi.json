@@ -1,0 +1,270 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ParkBench API",
+    "description": "AI Agent Discovery and Directory Platform",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/agents/register": {
+      "post": {
+        "summary": "Register Agent",
+        "description": "Registers a new agent.\n- Validates registration data.\n- Issues a unique `agent_id`.\n- Stores agent information.",
+        "operationId": "register_agent_agents_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentRegistrationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentRegistrationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "A2AMetadata": {
+        "properties": {
+          "supported_tasks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Supported Tasks",
+            "default": []
+          },
+          "negotiation": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Negotiation"
+          },
+          "context_required": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Context Required",
+            "default": []
+          },
+          "token_budget": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token Budget"
+          }
+        },
+        "type": "object",
+        "title": "A2AMetadata"
+      },
+      "AgentRegistrationRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "maintainer_contact": {
+            "type": "string",
+            "title": "Maintainer Contact"
+          },
+          "api_endpoint": {
+            "type": "string",
+            "maxLength": 2083,
+            "minLength": 1,
+            "format": "uri",
+            "title": "Api Endpoint"
+          },
+          "protocols": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Protocols"
+          },
+          "a2a_compliant": {
+            "type": "boolean",
+            "title": "A2A Compliant"
+          },
+          "skills": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Skills"
+          },
+          "input_formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Input Formats"
+          },
+          "output_formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Output Formats"
+          },
+          "pricing_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pricing Model"
+          },
+          "public_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Public Key"
+          },
+          "a2a": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/A2AMetadata"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "version",
+          "maintainer_contact",
+          "api_endpoint",
+          "protocols",
+          "a2a_compliant"
+        ],
+        "title": "AgentRegistrationRequest"
+      },
+      "AgentRegistrationResponse": {
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Agent Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "registered"
+          }
+        },
+        "type": "object",
+        "required": [
+          "agent_id"
+        ],
+        "title": "AgentRegistrationResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
